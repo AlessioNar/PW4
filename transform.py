@@ -205,4 +205,4 @@ def main(csv_path, output_path):
         f.write(turtle_data)
 
 # Example usage
-main('BenettonData.csv', 'benettonsuppliers.ttl')
+main('data/BenettonData.csv', 'data/benettonsuppliers.ttl')
