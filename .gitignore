@@ -3,3 +3,4 @@ BenettonSuppliersCleaned*
 BenettonSuppliers_cleaned.csv
 Pipfile
 Pipfile.lock
+!BenettonSuppliersCleaned5.0.csv
