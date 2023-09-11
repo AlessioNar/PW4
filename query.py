@@ -19,72 +19,77 @@ g.bind('rdf', RDF)
 g.bind('rdfs', RDFS)
 g.bind('schema1', Namespace(namespaces['schema1']))
 g.bind('gr', Namespace(namespaces['gr']))
-g.bind('foaf', Namespace(namespaces['foaf']))
 g.bind('ben', Namespace(namespaces['ben']))
 
 # Load RDF data from turtle file
 g.parse('data/benettonsuppliers.ttl', format='turtle')
 # Define query descriptions
 query_descriptions = {
-    'query1': "Count Companies with Wet Process and Certificates",
-    'query2': "In how many countries does the Benetton Group supply from?",
-    'query3': "Calculate Averages of Men, Women, and Migrant Percentages by Country",
-    'query4': "List Company Names with Collective Bargaining Agreements (CBA) and Coverage Percentages"
+    'query1': "What is the percentage of companies that perform wet process manufacturing have a certificates?",
+    'query2': "What percentage of employees are on average covered by CBAs for companies which perform wet processes manifacturing, produce apparel, hold certificates and have collective bargaining agreements (CBA)?",    
+    'query3':"Retrieve a list of companies and their names where each company is classified as a 'BusinessEntity,' has a name, is engaged in 'Manufacturing' processes, produces 'Shoes,' and has a percentage of women employees greater than 70%",
 }
 
 # Prepare SPARQL queries
 queries = {
     'query1': prepareQuery("""
-    
-   SELECT (COUNT(?company) AS ?count) WHERE {
-    ?company a gr:BusinessEntity.
-    ?company ben:hasProcess ben:Manufacturing.
-    ?company ben:hasCertificate ?certificate.
-    FILTER(?certificate != "")
+  SELECT
+  ((COUNT(?companyWithWetProcessAndCert) / ?totalCompaniesWithWetProcess) * 100.0 AS ?percentage)
+WHERE {
+  {
+    SELECT (COUNT(?company) AS ?totalCompaniesWithWetProcess)
+    WHERE {
+      ?company a gr:BusinessEntity.
+      ?company ben:hasProcess ben:WetProcess.
+    }
+  }
+  {
+    SELECT (COUNT(?company) AS ?companyWithWetProcessAndCert)
+    WHERE {
+      ?company a gr:BusinessEntity.
+      ?company ben:hasProcess ben:WetProcess.
+      ?company ben:hasCertificate ?certificate.
+      FILTER(?certificate != "")
+    }
+  }
 }
     """, initNs=namespaces),
 
     'query2': prepareQuery("""
-       SELECT (COUNT(DISTINCT ?country) AS ?count)
-        WHERE {
-        ?company a gr:BusinessEntity.
-        ?company ben:hasProcess ben:WetProcess.
-        ?company ben:hasCertificate ?cert.
-        ?company ben:hasProductType ben:Apparel.
-        ?company ?addressProp ?address.
-        ?address schema1:addressCountry ?country.
-        FILTER(?addressProp = schema1:address)
-        }
+       SELECT (AVG(?cbaPercentage) AS ?avgCBA)
+WHERE {
+  ?company a gr:BusinessEntity.
+  ?company ben:hasProcess ben:WetProcess.
+  ?company ben:hasProductType ben:Apparel.
+  ?company ben:hasCertificate ?certificate.
+  ?company ben:collectiveBargainingAgreement true.
+  ?company ben:coverageCBA ?cbaPercentage.
+}
 
     """, initNs=namespaces),
 
-    'query3': prepareQuery("""
-        SELECT ?country (AVG(?menPercentage) AS ?avgMen) (AVG(?womenPercentage) AS ?avgWomen) (AVG(?migrantPercentage) AS ?avgMigrants) WHERE {
-          ?company a gr:BusinessEntity.
-          ?company ben:address ?address.
-          ?address schema:addressCountry ?country.
-          ?company ben:percentageOfMen ?menPercentage.
-          ?company ben:percentageOfWomen ?womenPercentage.
-          ?company ben:percentageOfMigrants ?migrantPercentage.
-        }
-        GROUP BY ?country
-    """, initNs=namespaces),
+'query3':"""
+SELECT ?company ?name
+WHERE {
+  ?company a gr:BusinessEntity.
+  ?company ben:name ?name.
+  ?company ben:hasProcess ben:Manufacturing.
+  ?company ben:hasProductType ben:Shoes.
+  ?company ben:percentageOfWomen ?percentage.
+  FILTER (isLiteral(?percentage) && xsd:decimal(?percentage) > 70)
+}
 
-    'query4': prepareQuery("""
-        SELECT ?companyName ?cbaPercentage WHERE {
-          ?company a gr:BusinessEntity.
-          ?company ben:collectiveBargainingAgreement true.
-          ?company ben:coverageCBA ?cbaPercentage.
-          ?company ben:name ?companyName.
-        }
-    """, initNs=namespaces),
+
+"""
+
 }
 
 # Execute and print query descriptions and results
 for query_name, query in queries.items():
     print(f"{query_descriptions[query_name]}")    
-
+    print()
     results = g.query(query)
     for row in results:
-        print(row)
+        formatted_row = [f"{str(value.n3())}" for value in row]
+        print(" | ".join(formatted_row))
     print()
