@@ -1,8 +1,9 @@
-# AI4GOV PW 4: AI for Improved Data and Knowledge Governance
+# A knowledge graph of Benetton's suppliers network
+## AI4GOV Project Work 4: AI for Improved Data and Knowledge Governance
 
 
-The primary objective of this assignment is to construct a knowledge graph (?) for Benetton’s
-suppliers. The aim is to perform analytics and identify non-sustainable corporate behavior that
+The primary objective of this assignment is to construct a knowledge graph of the Benetton’s
+suppliers network. The aim is to perform analytics and identify non-sustainable corporate behavior that
 impacts negatively human rights and the environment, as defined in the proposal Corporate
 Sustainability Due Diligence and amending Directive (EU) 2019/1937.
 
